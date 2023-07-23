@@ -1,9 +1,9 @@
 from typing import List
 
 import streamlit as st
-from const import SessionKey
+from chatgpt_app.const import SessionKey
+from chatgpt_app.logger import get_logger
 from langchain.schema import BaseMessage
-from logger import get_logger
 
 logger = get_logger()
 

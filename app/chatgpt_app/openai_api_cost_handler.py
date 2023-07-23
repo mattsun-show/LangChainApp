@@ -1,11 +1,11 @@
 from typing import Any, Dict, List, Optional
 
 import tiktoken
+from chatgpt_app.logger import get_logger
 from langchain.callbacks.streamlit.streamlit_callback_handler import LLMThoughtLabeler, StreamlitCallbackHandler
 from langchain.chat_models.openai import _convert_message_to_dict
 from langchain.schema import LLMResult
 from langchain.schema.messages import BaseMessage
-from logger import get_logger
 from streamlit.delta_generator import DeltaGenerator
 
 logger = get_logger()
