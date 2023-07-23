@@ -10,7 +10,6 @@ from langchain.schema import AIMessage, HumanMessage, SystemMessage
 
 
 def init_page() -> None:
-    st.set_page_config(page_title="My Great ChatGPT", page_icon="🤗")
     st.header("My Great ChatGPT 🤗")
     st.sidebar.title("Options")
 
