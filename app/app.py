@@ -1,9 +1,9 @@
+from copy import deepcopy
+
 import streamlit as st
 from langchain.chat_models import ChatOpenAI
-from langchain.schema import SystemMessage, HumanMessage, AIMessage
-from langchain.callbacks import get_openai_callback
-from langchain.callbacks import StreamlitCallbackHandler
-from copy import deepcopy
+from langchain.schema import AIMessage, HumanMessage, SystemMessage
+from openai_api_cost_handler import StreamlitCostCalcHandler, TokenCostProcess
 
 
 def init_page():
@@ -34,29 +34,29 @@ def select_model():
         "Temperature:", min_value=0.0, max_value=2.0, value=0.0, step=0.01
     )
 
-    return ChatOpenAI(
-        temperature=temperature, model_name=model_name, streaming=True
+    llm = ChatOpenAI(
+        temperature=temperature,
+        model_name=model_name,
+        streaming=True,
     )
+    return llm, model_name
 
 
-def get_answer(llm, messages, callbacks=None):
-    with get_openai_callback() as cb:
-        answer = llm(messages, callbacks=callbacks)
-    return answer.content, cb.total_cost
+def get_answer(llm, messages, token_cost_process, callbacks=None):
+    answer = llm(messages, callbacks=callbacks)
+    return answer.content, token_cost_process.get_openai_total_cost_for_model()
 
 
 def main():
     init_page()
 
-    llm = select_model()
+    llm, model_name = select_model()
     init_messages()
 
     container = st.container()
 
-    # コストの表示
+    # コストの取得
     costs = deepcopy(st.session_state.get("costs", []))
-    st.sidebar.markdown("## Costs")
-    st.sidebar.markdown(f"**Total cost: ${sum(costs):.5f}**")
 
     # チャット履歴の表示
     messages = st.session_state.get("messages", [])
@@ -64,8 +64,8 @@ def main():
         if isinstance(message, AIMessage):
             with st.chat_message("assistant"):
                 st.markdown(message.content)
-            # コスト表示
-            st.write(f"cost: ${costs.pop(0):.5f}")
+                # コスト表示
+                st.markdown(f"cost: ${costs.pop(0):.5f}")
         elif isinstance(message, HumanMessage):
             with st.chat_message("user"):
                 st.markdown(message.content)
@@ -89,11 +89,19 @@ def main():
         # streaming表示
         st.chat_message("user").markdown(user_input)
         with st.chat_message("assistant"):
-            st_callback = StreamlitCallbackHandler(st.container())
-            answer, cost = get_answer(llm, messages, callbacks=[st_callback])
-        st.write(f"cost: ${cost:.5f}")
+            token_cost_process = TokenCostProcess(model_name)
+            st_callback = StreamlitCostCalcHandler(
+                st.container(), token_cost_process
+            )
+            answer = llm(messages, callbacks=[st_callback]).content
+            cost = token_cost_process.total_cost
+            st.markdown(f"cost: ${cost:.5f}")
         st.session_state.messages.append(AIMessage(content=answer))
         st.session_state.costs.append(cost)
+        # コストの再取得、表示
+        costs = deepcopy(st.session_state.get("costs", []))
+        st.sidebar.markdown("## Costs")
+        st.sidebar.markdown(f"**Total cost: ${sum(costs):.5f}**")
 
 
 if __name__ == "__main__":
