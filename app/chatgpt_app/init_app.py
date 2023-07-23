@@ -10,9 +10,13 @@ def init_session() -> StreamlistSessionManager:
 
 
 def init_pages(sm: StreamlistSessionManager) -> list[BasePage]:
-    from chatgpt_app.pages.chatbot import ChatBotPage
+    from chatgpt_app.pages.chatgpt.chatbot import ChatBotPage
+    from chatgpt_app.pages.chatgpt.web_summarize import WebSummarizePage
 
-    pages = [ChatBotPage(page_id=PageId.CHATBOT, title="Chat Bot", sm=sm)]
+    pages = [
+        ChatBotPage(page_id=PageId.CHATBOT, title="Chat Bot", sm=sm),
+        WebSummarizePage(page_id=PageId.WEB_SUMMARIZE, title="Website Summarizer", sm=sm),
+    ]
     return pages
 
 
