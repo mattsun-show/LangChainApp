@@ -1,11 +1,7 @@
 from typing import Any, Dict, List, Optional
-from uuid import UUID
 
 import tiktoken
-from langchain.callbacks.streamlit.streamlit_callback_handler import (
-    LLMThoughtLabeler,
-    StreamlitCallbackHandler,
-)
+from langchain.callbacks.streamlit.streamlit_callback_handler import LLMThoughtLabeler, StreamlitCallbackHandler
 from langchain.chat_models.openai import _convert_message_to_dict
 from langchain.schema import LLMResult
 from langchain.schema.messages import BaseMessage
@@ -34,7 +30,7 @@ MODEL_COST_PER_1K_TOKENS = {
 }
 
 
-def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0613"):
+def num_tokens_from_messages(messages: List[Dict[str, str]], model: str = "gpt-3.5-turbo-0613") -> int:
     """Return the number of tokens used by a list of messages."""
     try:
         encoding = tiktoken.encoding_for_model(model)
@@ -53,21 +49,13 @@ def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0613"):
         tokens_per_message = 3
         tokens_per_name = 1
     elif model == "gpt-3.5-turbo-0301":
-        tokens_per_message = (
-            4  # every message follows <|start|>{role/name}\n{content}<|end|>\n
-        )
+        tokens_per_message = 4  # every message follows <|start|>{role/name}\n{content}<|end|>\n
         tokens_per_name = -1  # if there's a name, the role is omitted
     elif "gpt-3.5-turbo" in model:
-        print(
-            "Warning: gpt-3.5-turbo may update over time. "
-            "Returning num tokens assuming gpt-3.5-turbo-0613."
-        )
+        print("Warning: gpt-3.5-turbo may update over time. " "Returning num tokens assuming gpt-3.5-turbo-0613.")
         return num_tokens_from_messages(messages, model="gpt-3.5-turbo-0613")
     elif "gpt-4" in model:
-        print(
-            "Warning: gpt-4 may update over time. "
-            "Returning num tokens assuming gpt-4-0613."
-        )
+        print("Warning: gpt-4 may update over time. " "Returning num tokens assuming gpt-4-0613.")
         return num_tokens_from_messages(messages, model="gpt-4-0613")
     else:
         raise NotImplementedError(
@@ -93,18 +81,18 @@ class TokenCostProcess:
     completion_tokens: int = 0
     successful_requests: int = 0
 
-    def __init__(self, model):
+    def __init__(self, model: str) -> None:
         self.model = model
 
-    def sum_prompt_tokens(self, tokens: int):
+    def sum_prompt_tokens(self, tokens: int) -> None:
         self.prompt_tokens = self.prompt_tokens + tokens
         self.total_tokens = self.total_tokens + tokens
 
-    def sum_completion_tokens(self, tokens: int):
+    def sum_completion_tokens(self, tokens: int) -> None:
         self.completion_tokens = self.completion_tokens + tokens
         self.total_tokens = self.total_tokens + tokens
 
-    def sum_successful_requests(self, requests: int):
+    def sum_successful_requests(self, requests: int) -> None:
         self.successful_requests = self.successful_requests + requests
 
     @property
@@ -134,9 +122,7 @@ class StreamlitCostCalcHandler(StreamlitCallbackHandler):
         thought_labeler: Optional[LLMThoughtLabeler] = None,
     ):
         self.token_cost_process = token_cost_process
-        self.encoding = tiktoken.encoding_for_model(
-            self.token_cost_process.model
-        )
+        self.encoding = tiktoken.encoding_for_model(self.token_cost_process.model)
         super().__init__(
             parent_container,
             max_thought_containers=max_thought_containers,
@@ -154,17 +140,13 @@ class StreamlitCostCalcHandler(StreamlitCallbackHandler):
         """Run when a chat model starts running."""
         # logger.info(messages)
         msg_dicts = list(map(_convert_message_to_dict, messages[0]))
-        token_num = num_tokens_from_messages(
-            msg_dicts, self.token_cost_process.model
-        )
+        token_num = num_tokens_from_messages(msg_dicts, self.token_cost_process.model)
         self.token_cost_process.sum_prompt_tokens(token_num)
         super().on_chat_model_start(serialized, messages, **kwargs)
 
-    def on_llm_new_token(self, token: str, **kwargs) -> None:
+    def on_llm_new_token(self, token: str, **kwargs: Any) -> None:
         # print(token)
-        self.token_cost_process.sum_completion_tokens(
-            len(self.encoding.encode(token))
-        )
+        self.token_cost_process.sum_completion_tokens(len(self.encoding.encode(token)))
         super().on_llm_new_token(token, **kwargs)
 
     def on_llm_end(self, response: LLMResult, **kwargs: Any) -> None:
