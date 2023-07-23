@@ -5,7 +5,10 @@ from langchain.callbacks.streamlit.streamlit_callback_handler import LLMThoughtL
 from langchain.chat_models.openai import _convert_message_to_dict
 from langchain.schema import LLMResult
 from langchain.schema.messages import BaseMessage
+from logger import get_logger
 from streamlit.delta_generator import DeltaGenerator
+
+logger = get_logger()
 
 MODEL_COST_PER_1K_TOKENS = {
     "gpt-4": 0.03,
@@ -35,7 +38,7 @@ def num_tokens_from_messages(messages: List[Dict[str, str]], model: str = "gpt-3
     try:
         encoding = tiktoken.encoding_for_model(model)
     except KeyError:
-        print("Warning: model not found. Using cl100k_base encoding.")
+        logger.warning("model not found. Using cl100k_base encoding.")
         encoding = tiktoken.get_encoding("cl100k_base")
 
     if model in {
@@ -52,10 +55,10 @@ def num_tokens_from_messages(messages: List[Dict[str, str]], model: str = "gpt-3
         tokens_per_message = 4  # every message follows <|start|>{role/name}\n{content}<|end|>\n
         tokens_per_name = -1  # if there's a name, the role is omitted
     elif "gpt-3.5-turbo" in model:
-        print("Warning: gpt-3.5-turbo may update over time. " "Returning num tokens assuming gpt-3.5-turbo-0613.")
+        logger.warning("gpt-3.5-turbo may update over time. " "Returning num tokens assuming gpt-3.5-turbo-0613.")
         return num_tokens_from_messages(messages, model="gpt-3.5-turbo-0613")
     elif "gpt-4" in model:
-        print("Warning: gpt-4 may update over time. " "Returning num tokens assuming gpt-4-0613.")
+        logger.warning("gpt-4 may update over time. " "Returning num tokens assuming gpt-4-0613.")
         return num_tokens_from_messages(messages, model="gpt-4-0613")
     else:
         raise NotImplementedError(

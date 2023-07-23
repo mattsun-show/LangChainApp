@@ -33,7 +33,7 @@ def get_logger(name: Optional[str] = None, loglevel: int = LOG_LEVEL) -> logging
     # cf: [［python］loggerの出力が重複するのを防ぐ - 盆暗の学習記録](https://nigimitama.hatenablog.jp/entry/2021/01/27/084458)
     if logger.hasHandlers():
         logger.handlers.clear()
-    logger.setLevel(logging.INFO)
+    logger.setLevel(loglevel)
     handler = logging.StreamHandler(sys.stdout)
     handler_format = ColoredFormatter(
         "{color}{asctime} [{levelname:8}] {name}:{funcName}:{lineno}{reset} {message}",
