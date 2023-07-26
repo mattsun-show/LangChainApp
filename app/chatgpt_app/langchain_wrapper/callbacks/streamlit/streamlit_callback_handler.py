@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional
 from chatgpt_app.langchain_wrapper.token_cost_process import TokenCostProcess
 from chatgpt_app.logger import get_logger
 from langchain.callbacks.streamlit.streamlit_callback_handler import LLMThoughtLabeler, StreamlitCallbackHandler
-from langchain.schema import AgentFinish, LLMResult
+from langchain.schema import LLMResult
 from langchain.schema.messages import BaseMessage
 from streamlit.delta_generator import DeltaGenerator
 
