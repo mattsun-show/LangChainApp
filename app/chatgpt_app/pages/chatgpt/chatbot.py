@@ -21,9 +21,7 @@ class ChatBotPage(BaseChatGPTPage):
                 st.write(f"System message: {message.content}")
 
     def render(self) -> None:
-        self.init_page()
-        llm = self.select_model()
-        self.init_messages(self.sm)
+        llm = self.base_components()
 
         # ユーザー入力欄を一番上に置いておく
         container = st.container()

@@ -1,6 +1,7 @@
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 import streamlit as st
+from chatgpt_app.const import PageId
 from chatgpt_app.langchain_wrapper.callbacks.streamlit.streamlit_callback_handler import StreamlitCostCalcHandler
 from chatgpt_app.langchain_wrapper.token_cost_process import TokenCostProcess
 from chatgpt_app.pages.base import BasePage
@@ -10,9 +11,14 @@ from langchain.schema import BaseMessage, SystemMessage
 
 
 class BaseChatGPTPage(BasePage):
+    def __init__(self, page_id: PageId, title: str, sm: StreamlistSessionManager) -> None:
+        super().__init__(page_id, title, sm)
+        self.clear_button: Optional[bool] = None
+
     def init_page(self) -> None:
         st.header(f"{self.title}  🤗")
         st.sidebar.title("Options")
+        self.clear_button = st.sidebar.button("Clear Conversation", key="clear")
 
     def select_model(self) -> ChatOpenAI:
         model = st.sidebar.radio("Choose a model:", ("GPT-3.5", "GPT-4"))
@@ -33,11 +39,16 @@ class BaseChatGPTPage(BasePage):
         return llm
 
     def init_messages(self, sm: StreamlistSessionManager) -> None:
-        clear_button = st.sidebar.button("Clear Conversation", key="clear")
-        if clear_button or len(sm.get_messages()) == 0:
-            sm.clear_messages()
-            sm.clear_costs()
-            sm.add_message(SystemMessage(content="You are a helpful assistant."))
+        sm.clear_messages()
+        sm.clear_costs()
+        sm.add_message(SystemMessage(content="You are a helpful assistant."))
+
+    def base_components(self) -> ChatOpenAI:
+        self.init_page()
+        llm = self.select_model()
+        if self.clear_button:
+            self.init_messages(self.sm)
+        return llm
 
     def get_streaming_answer(self, llm: ChatOpenAI, messages: List[BaseMessage]) -> Tuple[str, float]:
         token_cost_process = TokenCostProcess(llm.model_name)

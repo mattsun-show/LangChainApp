@@ -4,16 +4,22 @@ from urllib.parse import urlparse
 import requests
 import streamlit as st
 from bs4 import BeautifulSoup
+from chatgpt_app.const import SessionKey
 from chatgpt_app.logger import get_logger
 from chatgpt_app.pages.chatgpt.base_chatgpt import BaseChatGPTPage
+from chatgpt_app.session import StreamlistSessionManager
 from langchain.schema import HumanMessage
 
 logger = get_logger(__name__)
 
 
 class WebSummarizePage(BaseChatGPTPage):
+    def init_messages(self, sm: StreamlistSessionManager) -> None:
+        sm.clear_url_input()
+        return super().init_messages(sm)
+
     def get_url_input(self) -> str:
-        url = st.text_input("URL: ", key="input")
+        url = st.text_input("URL: ", key=SessionKey.URL_INPUT.name)
         return url
 
     def validate_url(self, url: str) -> bool:
@@ -53,9 +59,7 @@ class WebSummarizePage(BaseChatGPTPage):
         return prompt
 
     def render(self) -> None:
-        self.init_page()
-        llm = self.select_model()
-        self.init_messages(self.sm)
+        llm = self.base_components()
 
         url_container = st.container()
         response_container = st.container()

@@ -13,6 +13,7 @@ class StreamlistSessionManager:
         self._session_state = st.session_state
         self._session_state[SessionKey.MESSAGES.name] = []
         self._session_state[SessionKey.COSTS.name] = []
+        self._session_state[SessionKey.URL_INPUT.name] = ""
 
     # -----------------------
     # messages
@@ -37,3 +38,9 @@ class StreamlistSessionManager:
 
     def clear_costs(self) -> None:
         self._session_state[SessionKey.COSTS.name] = []
+
+    # -----------------------
+    # url_input
+    # -----------------------
+    def clear_url_input(self) -> None:
+        self._session_state[SessionKey.URL_INPUT.name] = ""
