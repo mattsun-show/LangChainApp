@@ -1,14 +1,11 @@
-from typing import Any, Dict, List, Optional
+from typing import Dict, List
 
 import tiktoken
 from chatgpt_app.logger import get_logger
-from langchain.callbacks.streamlit.streamlit_callback_handler import LLMThoughtLabeler, StreamlitCallbackHandler
 from langchain.chat_models.openai import _convert_message_to_dict
-from langchain.schema import LLMResult
 from langchain.schema.messages import BaseMessage
-from streamlit.delta_generator import DeltaGenerator
 
-logger = get_logger()
+logger = get_logger(__name__)
 
 MODEL_COST_PER_1K_TOKENS = {
     "gpt-4": 0.03,
@@ -86,6 +83,7 @@ class TokenCostProcess:
 
     def __init__(self, model: str) -> None:
         self.model = model
+        self.encoding = tiktoken.encoding_for_model(self.model)
 
     def sum_prompt_tokens(self, tokens: int) -> None:
         self.prompt_tokens = self.prompt_tokens + tokens
@@ -112,46 +110,10 @@ class TokenCostProcess:
             f"Total Cost (USD): {self.total_cost}"
         )
 
+    def tokens_from_base_messages(self, messages: List[BaseMessage]) -> int:
+        msg_dicts = list(map(_convert_message_to_dict, messages))
+        token_num = num_tokens_from_messages(msg_dicts, self.model)
+        return token_num
 
-class StreamlitCostCalcHandler(StreamlitCallbackHandler):
-    def __init__(
-        self,
-        parent_container: DeltaGenerator,
-        token_cost_process: TokenCostProcess,
-        *,
-        max_thought_containers: int = 4,
-        expand_new_thoughts: bool = True,
-        collapse_completed_thoughts: bool = True,
-        thought_labeler: Optional[LLMThoughtLabeler] = None,
-    ):
-        self.token_cost_process = token_cost_process
-        self.encoding = tiktoken.encoding_for_model(self.token_cost_process.model)
-        super().__init__(
-            parent_container,
-            max_thought_containers=max_thought_containers,
-            expand_new_thoughts=expand_new_thoughts,
-            collapse_completed_thoughts=collapse_completed_thoughts,
-            thought_labeler=thought_labeler,
-        )
-
-    def on_chat_model_start(
-        self,
-        serialized: Dict[str, Any],
-        messages: List[List[BaseMessage]],
-        **kwargs: Any,
-    ) -> None:
-        """Run when a chat model starts running."""
-        # logger.info(messages)
-        msg_dicts = list(map(_convert_message_to_dict, messages[0]))
-        token_num = num_tokens_from_messages(msg_dicts, self.token_cost_process.model)
-        self.token_cost_process.sum_prompt_tokens(token_num)
-        super().on_chat_model_start(serialized, messages, **kwargs)
-
-    def on_llm_new_token(self, token: str, **kwargs: Any) -> None:
-        # print(token)
-        self.token_cost_process.sum_completion_tokens(len(self.encoding.encode(token)))
-        super().on_llm_new_token(token, **kwargs)
-
-    def on_llm_end(self, response: LLMResult, **kwargs: Any) -> None:
-        self.token_cost_process.sum_successful_requests(1)
-        super().on_llm_end(response, **kwargs)
+    def tokens_from_string(self, string: str) -> int:
+        return len(self.encoding.encode(string))
