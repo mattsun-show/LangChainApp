@@ -9,6 +9,7 @@ from chatgpt_app.logger import get_logger
 from chatgpt_app.pages.chatgpt.base_chatgpt import BaseChatGPTPage
 from chatgpt_app.session import StreamlistSessionManager
 from langchain.schema import HumanMessage
+from streamlit_extras.stoggle import stoggle
 
 logger = get_logger(__name__)
 
@@ -85,7 +86,7 @@ class WebSummarizePage(BaseChatGPTPage):
                 self.sm.add_cost(cost)
                 st.markdown("---")
                 st.markdown("## Original Text")
-                st.write(content)
+                stoggle("Original Text", content)
 
         costs = self.sm.get_costs()
         st.sidebar.markdown("## Costs")
