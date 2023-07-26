@@ -49,7 +49,6 @@ class ChatBotPage(BaseChatGPTPage):
                 st.markdown(f"cost: ${cost:.5f}")
                 self.sm.add_message(AIMessage(content=answer))
                 self.sm.add_cost(cost)
-            # 合計コストの再取得、表示
-            costs = self.sm.get_costs()
-            st.sidebar.markdown("## Costs")
-            st.sidebar.markdown(f"**Total cost: ${sum(costs):.5f}**")
+
+        # 合計コストの再取得、表示
+        self.total_cost_component()

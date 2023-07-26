@@ -64,7 +64,7 @@ class WebSummarizePage(BaseChatGPTPage):
 
         url_container = st.container()
         response_container = st.container()
-        summarize_length = st.sidebar.slider("Summarize Length:", min_value=50, max_value=1000, value=300, step=1)
+        summarize_length = self.sidebar.slider("Summarize Length:", min_value=50, max_value=1000, value=300, step=1)
 
         show_result = False
         with url_container:
@@ -88,6 +88,5 @@ class WebSummarizePage(BaseChatGPTPage):
                 st.markdown("## Original Text")
                 stoggle("Original Text", content)
 
-        costs = self.sm.get_costs()
-        st.sidebar.markdown("## Costs")
-        st.sidebar.markdown(f"**Total cost: ${sum(costs):.5f}**")
+        # 合計コストの再取得、表示
+        self.total_cost_component()

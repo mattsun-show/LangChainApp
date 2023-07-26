@@ -12,6 +12,9 @@ class MultiPageApp:
         self.pages = {page.page_id: page for page in pages}
         self.nav_label = nav_label
 
+    def init_session(self) -> None:
+        self.sm = StreamlistSessionManager()
+
     def render(self) -> None:
         # ページ選択ボックス
         page_id = st.sidebar.selectbox(
@@ -19,6 +22,7 @@ class MultiPageApp:
             list(self.pages.keys()),
             format_func=lambda page_id: self.pages[page_id].title,
             key=SessionKey.PAGE_ID.name,
+            on_change=self.init_session,
         )
 
         # ページ描画

@@ -5,20 +5,23 @@ from chatgpt_app.const import PageId
 from chatgpt_app.langchain_wrapper.callbacks.streamlit.streamlit_callback_handler import StreamlitCostCalcHandler
 from chatgpt_app.langchain_wrapper.token_cost_process import TokenCostProcess
 from chatgpt_app.pages.base import BasePage
-from chatgpt_app.session import StreamlistSessionManager
+from chatgpt_app.session import SessionKey, StreamlistSessionManager
 from langchain.chat_models import ChatOpenAI
 from langchain.schema import BaseMessage, SystemMessage
+from streamlit.delta_generator import DeltaGenerator
 
 
 class BaseChatGPTPage(BasePage):
     def __init__(self, page_id: PageId, title: str, sm: StreamlistSessionManager) -> None:
         super().__init__(page_id, title, sm)
+        self.sidebar: Optional[DeltaGenerator] = None
         self.clear_button: Optional[bool] = None
 
     def init_page(self) -> None:
         st.header(f"{self.title}  🤗")
-        st.sidebar.title("Options")
-        self.clear_button = st.sidebar.button("Clear Conversation", key="clear")
+        self.sidebar = st.sidebar
+        self.sidebar.title("Options")
+        self.clear_button = self.sidebar.button("Clear Conversation", key=SessionKey.CLEAR_BUTTON.name)
 
     def select_model(self) -> ChatOpenAI:
         model = st.sidebar.radio("Choose a model:", ("GPT-3.5", "GPT-4"))
@@ -49,6 +52,12 @@ class BaseChatGPTPage(BasePage):
         if self.clear_button:
             self.init_messages(self.sm)
         return llm
+
+    def total_cost_component(self) -> None:
+        costs = self.sm.get_costs()
+        if self.sidebar is not None:
+            self.sidebar.markdown("## Costs")
+            self.sidebar.markdown(f"**Total cost: ${sum(costs):.5f}**")
 
     def get_streaming_answer(self, llm: ChatOpenAI, messages: List[BaseMessage]) -> Tuple[str, float]:
         token_cost_process = TokenCostProcess(llm.model_name)

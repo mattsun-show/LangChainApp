@@ -6,6 +6,7 @@ class SessionKey(Enum):
     PAGE_ID = auto()
     MESSAGES = auto()
     COSTS = auto()
+    CLEAR_BUTTON = auto()
     # web summarize page
     URL_INPUT = auto()
 
