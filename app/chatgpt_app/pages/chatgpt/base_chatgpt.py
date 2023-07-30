@@ -2,9 +2,9 @@ from typing import List, Optional, Tuple
 
 import streamlit as st
 from chatgpt_app.const import PageId
-from chatgpt_app.langchain_wrapper.callbacks.streamlit.streamlit_callback_handler import StreamlitCostCalcHandler
-from chatgpt_app.langchain_wrapper.token_cost_process import TokenCostProcess
+from chatgpt_app.langchain_wrapper import StreamlitCostCalcHandler, TokenCostProcess
 from chatgpt_app.pages.base import BasePage
+from chatgpt_app.prompts import PromptsLoader
 from chatgpt_app.session import SessionKey, StreamlistSessionManager
 from langchain.chat_models import ChatOpenAI
 from langchain.schema import BaseMessage, SystemMessage
@@ -16,6 +16,7 @@ class BaseChatGPTPage(BasePage):
         super().__init__(page_id, title, sm)
         self.sidebar: Optional[DeltaGenerator] = None
         self.clear_button: Optional[bool] = None
+        self.prompts_loader: PromptsLoader = PromptsLoader()
 
     def init_page(self) -> None:
         st.header(f"{self.title}  🤗")

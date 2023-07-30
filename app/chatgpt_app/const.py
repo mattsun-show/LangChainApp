@@ -14,3 +14,4 @@ class SessionKey(Enum):
 class PageId(Enum):
     CHATBOT = auto()
     WEB_SUMMARIZE = auto()
+    YOUTUBE_SUMMARIZE = auto()

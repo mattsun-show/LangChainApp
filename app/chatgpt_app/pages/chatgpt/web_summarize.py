@@ -46,19 +46,6 @@ class WebSummarizePage(BaseChatGPTPage):
             st.write("something wrong")
             return None
 
-    def build_prompt(self, content: str, n_chars: int = 300) -> str:
-        prompt = f"""以下はとあるWebページのコンテンツです。内容を{n_chars}字程度でわかりやすく要約してください。
-
-========
-
-{content[:1000]}
-
-========
-
-日本語で書いください。
-"""
-        return prompt
-
     def render(self) -> None:
         llm = self.base_components()
 
@@ -66,7 +53,7 @@ class WebSummarizePage(BaseChatGPTPage):
         response_container = st.container()
         summarize_length = self.sidebar.slider("Summarize Length:", min_value=50, max_value=1000, value=300, step=1)
 
-        show_result = False
+        content = None
         with url_container:
             url = self.get_url_input()
             is_valid_url = self.validate_url(url)
@@ -75,11 +62,10 @@ class WebSummarizePage(BaseChatGPTPage):
             else:
                 content = self.get_content(url)
                 if content:
-                    prompt = self.build_prompt(content, summarize_length)
+                    prompt = self.prompts_loader.web_summarize(content, summarize_length)
                     self.sm.add_message(HumanMessage(content=prompt))
-                    show_result = True
 
-        if show_result:
+        if content:
             with response_container:
                 st.markdown("## Summary")
                 answer, cost = self.get_streaming_answer(llm, self.sm.get_messages())
