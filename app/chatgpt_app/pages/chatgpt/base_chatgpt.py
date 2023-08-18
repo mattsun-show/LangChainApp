@@ -25,11 +25,8 @@ class BaseChatGPTPage(BasePage):
         self.clear_button = self.sidebar.button("Clear Conversation", key=SessionKey.CLEAR_BUTTON.name)
 
     def select_model(self) -> ChatOpenAI:
-        model = st.sidebar.radio("Choose a model:", ("GPT-3.5", "GPT-4"))
-        if model == "GPT-3.5":
-            model_name = "gpt-3.5-turbo"
-        else:
-            model_name = "gpt-4"
+        model_name = st.sidebar.radio("Choose a model:", ("gpt-3.5-turbo", "gpt-3.5-turbo-16k-0613", "gpt-4"))
+        self.sm.register_model_name(model_name)
 
         # スライダーを追加し、temperatureを0から2までの範囲で選択可能にする
         # 初期値は0.0、刻み幅は0.1とする
@@ -37,7 +34,7 @@ class BaseChatGPTPage(BasePage):
 
         llm = ChatOpenAI(  # type: ignore
             temperature=temperature,
-            model_name=model_name,
+            model_name=self.sm.get_model_name(),
             streaming=True,
         )
         return llm

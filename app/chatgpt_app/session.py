@@ -13,7 +13,9 @@ class StreamlistSessionManager:
         self._session_state = st.session_state
         self._session_state[SessionKey.MESSAGES.name] = []
         self._session_state[SessionKey.COSTS.name] = []
+        self._session_state[SessionKey.MODEL_NAME] = ""
         self._session_state[SessionKey.URL_INPUT.name] = ""
+        self._session_state[SessionKey.MAX_TOKEN.name] = 0
 
     # -----------------------
     # messages
@@ -40,7 +42,25 @@ class StreamlistSessionManager:
         self._session_state[SessionKey.COSTS.name] = []
 
     # -----------------------
+    # model_name
+    # -----------------------
+    def get_model_name(self) -> str:
+        return self._session_state[SessionKey.MODEL_NAME.name]
+
+    def register_model_name(self, model_name: str) -> None:
+        self._session_state[SessionKey.MODEL_NAME.name] = model_name
+
+    # -----------------------
     # url_input
     # -----------------------
     def clear_url_input(self) -> None:
         self._session_state[SessionKey.URL_INPUT.name] = ""
+
+    # -----------------------
+    # max_token
+    # -----------------------
+    def get_max_token(self) -> int:
+        return self._session_state[SessionKey.MAX_TOKEN.name]
+
+    def register_max_token(self, max_token_num: int) -> None:
+        self._session_state[SessionKey.MAX_TOKEN.name] = max_token_num

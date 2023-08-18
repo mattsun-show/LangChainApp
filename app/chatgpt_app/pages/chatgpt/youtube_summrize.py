@@ -11,12 +11,18 @@ from langchain.chat_models import ChatOpenAI
 from langchain.docstore.document import Document
 from langchain.document_loaders import YoutubeLoader
 from langchain.prompts import PromptTemplate
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 from streamlit_extras.stoggle import stoggle
 
 logger = get_logger(__name__)
 
 
 class YouTubeSummarizePage(BaseChatGPTPage):
+    def select_model(self) -> ChatOpenAI:
+        # 本文以外の指示のtoken数
+        self.sm.register_max_token(300)
+        return super().select_model()
+
     def init_messages(self, sm: StreamlistSessionManager) -> None:
         sm.clear_url_input()
         return super().init_messages(sm)
@@ -31,16 +37,25 @@ class YouTubeSummarizePage(BaseChatGPTPage):
     def get_document(self, url: str) -> List[Document]:
         with st.spinner("Fetching Content ..."):
             loader = YoutubeLoader.from_youtube_url(url, add_video_info=True, language=["en", "ja"])
-            return loader.load()
+            text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
+                model_name=self.sm.get_model_name(), chunk_size=self.sm.get_max_token(), chunk_overlap=0
+            )
+            return loader.load_and_split(text_splitter=text_splitter)
 
     def summarize(self, llm: ChatOpenAI, docs: List[Document]) -> Tuple[str, float]:
         prompt_template = self.prompts_loader.youtube_summarize_template()
         PROMPT = PromptTemplate(template=prompt_template, input_variables=["text"])
 
-        chain = load_summarize_chain(llm, chain_type="stuff", verbose=True, prompt=PROMPT)
+        chain = load_summarize_chain(
+            llm, chain_type="map_reduce", verbose=True, map_prompt=PROMPT, combine_prompt=PROMPT
+        )
         token_cost_process = TokenCostProcess(llm.model_name)
         st_callback = StreamlitCostCalcHandler(st.container(), token_cost_process)
-        response = chain({"input_documents": docs}, return_only_outputs=True, callbacks=[st_callback])
+        response = chain(
+            {"input_documents": docs, "token_max": self.sm.get_max_token()},
+            return_only_outputs=True,
+            callbacks=[st_callback],
+        )
 
         answer = response["output_text"]
         cost = token_cost_process.total_cost
