@@ -1,0 +1,20 @@
+{
+    // IntelliSense を使用して利用可能な属性を学べます。
+    // 既存の属性の説明をホバーして表示します。
+    // 詳細情報は次を確認してください: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: debug",
+            "type": "python",
+            "request": "launch",
+            "program": "C:\\Users\\msho_\\AppData\\Local\\pypoetry\\Cache\\virtualenvs\\app-YAGUtRDQ-py3.11\\Scripts\\streamlit.exe",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "args": [
+                "run",
+                "app/main.py"
+            ]
+        }
+    ]
+}

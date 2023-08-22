@@ -1,6 +1,8 @@
 from typing import List, Optional, Tuple
 
 import streamlit as st
+import datetime
+import os
 from chatgpt_app.const import PageId
 from chatgpt_app.langchain_wrapper import StreamlitCostCalcHandler, TokenCostProcess
 from chatgpt_app.pages.base import BasePage
@@ -31,6 +33,18 @@ class BaseChatGPTPage(BasePage):
         # スライダーを追加し、temperatureを0から2までの範囲で選択可能にする
         # 初期値は0.0、刻み幅は0.1とする
         temperature = st.sidebar.slider("Temperature:", min_value=0.0, max_value=2.0, value=0.0, step=0.01)
+
+        # LangSmithを利用するか
+        if st.sidebar.checkbox('LangSmith'):
+            date = datetime.datetime.now()
+            os.environ["LANGCHAIN_TRACING_V2"] = "true"
+            os.environ["LANGCHAIN_ENDPOINT"] = "https://api.smith.langchain.com"
+            os.environ["LANGCHAIN_PROJECT"] = f"Tracing Walkthrough - {date}"
+            api_key = os.getenv("LANGCHAIN_API_KEY")
+            if api_key is None:
+                st.write("LANGCHAIN_API_KEY is None")
+            else:
+                os.environ["LANGCHAIN_API_KEY"] = api_key
 
         llm = ChatOpenAI(  # type: ignore
             temperature=temperature,
