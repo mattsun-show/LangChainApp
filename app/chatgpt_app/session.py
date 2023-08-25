@@ -16,6 +16,9 @@ class StreamlistSessionManager:
         self._session_state[SessionKey.MODEL_NAME] = ""
         self._session_state[SessionKey.URL_INPUT.name] = ""
         self._session_state[SessionKey.MAX_TOKEN.name] = 0
+        self._session_state[SessionKey.MAP_PROMPT_INPUT] = ""
+        self._session_state[SessionKey.COMBINE_PROMPT_INPUT] = ""
+        self._session_state[SessionKey.REFINE_PROMPT_INPUT] = ""
 
     # -----------------------
     # messages
@@ -55,6 +58,33 @@ class StreamlistSessionManager:
     # -----------------------
     def clear_url_input(self) -> None:
         self._session_state[SessionKey.URL_INPUT.name] = ""
+
+    # -----------------------
+    # map_prompt_input
+    # -----------------------
+    def set_map_prompt_input(self, prompt: str) -> None:
+        self._session_state[SessionKey.MAP_PROMPT_INPUT.name] = prompt
+
+    def get_map_prompt_input(self) -> str:
+        return self._session_state[SessionKey.MAP_PROMPT_INPUT.name]
+
+    # -----------------------
+    # combine_prompt_input
+    # -----------------------
+    def set_combine_prompt_input(self, prompt: str) -> None:
+        self._session_state[SessionKey.COMBINE_PROMPT_INPUT.name] = prompt
+
+    def get_combine_prompt_input(self) -> str:
+        return self._session_state[SessionKey.COMBINE_PROMPT_INPUT.name]
+
+    # -----------------------
+    # refine_prompt_input
+    # -----------------------
+    def set_refine_prompt_input(self, prompt: str) -> None:
+        self._session_state[SessionKey.REFINE_PROMPT_INPUT.name] = prompt
+
+    def get_refine_prompt_input(self) -> str:
+        return self._session_state[SessionKey.REFINE_PROMPT_INPUT.name]
 
     # -----------------------
     # max_token

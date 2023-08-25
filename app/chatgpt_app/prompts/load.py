@@ -29,8 +29,8 @@ class PromptsLoader:
 """
         return prompt
 
-    def web_summarize_combine_template(self, n_chars: int = 300) -> str:
-        prompt = f"""あなたの仕事はニュース原稿を書くことです。
+    def web_summarize_combine_template(self) -> str:
+        prompt = """あなたの仕事はニュース原稿を書くことです。
         メモを元に、{n_chars}文字程度で、ニュースの原稿をわかりやすく論理的に敬語で書いてください。
 ========
 メモ:{{text}}
@@ -38,8 +38,8 @@ class PromptsLoader:
 """
         return prompt
 
-    def web_summarize_refine_template(self, n_chars: int = 300) -> str:
-        prompt = f"""以下はとあるWebページのコンテンツです。内容を{n_chars}字程度でわかりやすく要約してください。
+    def web_summarize_refine_template(self) -> str:
+        prompt = """以下はとあるWebページのコンテンツです。内容を{n_chars}字程度でわかりやすく要約してください。
 ========
 メモ:{{text}}
 ========

@@ -4,7 +4,7 @@ from urllib.parse import urlparse
 import requests
 import streamlit as st
 from bs4 import BeautifulSoup
-from chatgpt_app.const import SessionKey
+from chatgpt_app.const import ChainType, SessionKey
 from chatgpt_app.langchain_wrapper import TokenCostProcess
 from chatgpt_app.logger import get_logger
 from chatgpt_app.pages.chatgpt.base_chatgpt import BaseChatGPTPage
@@ -28,9 +28,29 @@ class WebSummarizePage(BaseChatGPTPage):
         self.sm.register_max_token(1000)
         return super().select_model()
 
+    def init_page(self) -> None:
+        self.sm.set_map_prompt_input(self.prompts_loader.web_summarize_map_template())
+        self.sm.set_combine_prompt_input(self.prompts_loader.web_summarize_combine_template())
+        self.sm.set_refine_prompt_input(self.prompts_loader.web_summarize_refine_template())
+        return super().init_page()
+
     def init_messages(self, sm: StreamlistSessionManager) -> None:
         sm.clear_url_input()
+        sm.set_map_prompt_input(self.prompts_loader.web_summarize_map_template())
+        sm.set_combine_prompt_input(self.prompts_loader.web_summarize_combine_template())
+        sm.set_refine_prompt_input(self.prompts_loader.web_summarize_refine_template())
         return super().init_messages(sm)
+
+    def get_prompt_input(self, chain_type: str) -> None:
+        if chain_type == ChainType.MAP_REDUCE.value:
+            st.text_area(label="Map Prompt: ", key=SessionKey.MAP_PROMPT_INPUT.name, height=300)
+            st.text_area(label="Combine Prompt: ", key=SessionKey.COMBINE_PROMPT_INPUT.name, height=300)
+        elif chain_type == ChainType.MAP_RERANK.value:
+            st.write('"map_rerank" has not been implemented.')
+        elif chain_type == ChainType.REFINE.value:
+            st.text_area(label="Refine Prompt: ", key=SessionKey.REFINE_PROMPT_INPUT.name, height=300)
+        else:
+            st.write("Please retry")
 
     def get_url_input(self) -> str:
         url = st.text_input("URL: ", key=SessionKey.URL_INPUT.name)
@@ -70,8 +90,8 @@ class WebSummarizePage(BaseChatGPTPage):
         with st.spinner("Summarize Content ..."):
             # chain_typeでpromptを変える
             if chain_type == "map_reduce":
-                map_prompt_template = self.prompts_loader.web_summarize_map_template()
-                combine_prompt_template = self.prompts_loader.web_summarize_combine_template(summarize_length)
+                map_prompt_template = self.sm.get_map_prompt_input()
+                combine_prompt_template = self.sm.get_combine_prompt_input().format(n_chars=summarize_length)
                 MAP_PROMPT = PromptTemplate(template=map_prompt_template, input_variables=["text"])
                 COMBINE_PROMPT = PromptTemplate(template=combine_prompt_template, input_variables=["text"])
                 map_chain = LLMChain(llm=llm, prompt=MAP_PROMPT)
@@ -94,7 +114,7 @@ class WebSummarizePage(BaseChatGPTPage):
                 st.write('"map_rerank" has not been implemented.')
                 return None
             elif chain_type == "refine":
-                prompt_template = self.prompts_loader.web_summarize_refine_template(summarize_length)
+                prompt_template = self.sm.get_refine_prompt_input().format(n_chars=summarize_length)
                 PROMPT = PromptTemplate(template=prompt_template, input_variables=["text"])
                 chain = load_summarize_chain(llm, chain_type=chain_type, verbose=True, refine_prompt=PROMPT)
                 response = chain(
@@ -114,10 +134,16 @@ class WebSummarizePage(BaseChatGPTPage):
     def render(self) -> None:
         llm = self.base_components()
 
+        prompt_container = st.container()
         url_container = st.container()
         response_container = st.container()
         summarize_length = self.sidebar.slider("Summarize Length:", min_value=50, max_value=1000, value=300, step=1)
-        chain_type = self.sidebar.radio("Choose chain type:", ("map_reduce", "map_rerank", "refine"))
+        chain_type = self.sidebar.radio(
+            "Choose chain type:", (ChainType.MAP_REDUCE.value, ChainType.MAP_RERANK.value, ChainType.REFINE.value)
+        )
+
+        with prompt_container:
+            self.get_prompt_input(chain_type)
 
         document = None
         with url_container:
